@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "469393954960",
+    "project_id": "bizmanager-93c0d",
+    "storage_bucket": "bizmanager-93c0d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:469393954960:android:689750dec3731fe9c7a015",
+        "android_client_info": {
+          "package_name": "com.corporatemundo.bizmanager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeZa5RuKy6JZikWjL_QD1Bt82bg2gYolQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:469393954960:android:90062939f12acc1ac7a015",
+        "android_client_info": {
+          "package_name": "com.example.bizmanager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeZa5RuKy6JZikWjL_QD1Bt82bg2gYolQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
