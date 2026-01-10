@@ -8,6 +8,8 @@ import '../providers/sales_provider.dart';
 import 'products_list_screen.dart';
 import 'inventory_tracking_screen.dart';
 import 'sales_screen.dart';
+import 'sales_reports_screen.dart';
+import 'sales_history_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -510,7 +512,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const SalesScreen(),
+                builder: (context) => const SalesReportsScreen(),
               ),
             );
           },
@@ -677,6 +679,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const SalesScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.purple.withOpacity(0.1),
+                  child: const Icon(Icons.history, color: Colors.purple),
+                ),
+                title: const Text('Sales History'),
+                subtitle: const Text('View past transactions'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SalesHistoryScreen(),
                     ),
                   );
                 },
