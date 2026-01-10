@@ -42,10 +42,17 @@ class ProductProvider with ChangeNotifier {
 
   // Initialize and load products
   void loadProducts() {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not authenticated';
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
     notifyListeners();
 
-    _productService.getActiveProducts().listen(
+    _productService.getActiveProducts(userId).listen(
       (productList) {
         _products = productList;
         _applyFilters();
@@ -96,6 +103,13 @@ class ProductProvider with ChangeNotifier {
     required String category,
     File? imageFile,
   }) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not authenticated';
+      notifyListeners();
+      return false;
+    }
+
     try {
       _isLoading = true;
       _errorMessage = '';
@@ -113,6 +127,7 @@ class ProductProvider with ChangeNotifier {
         category: category,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        userId: userId, // Add userId
       );
 
       final productId = await _productService.createProduct(tempProduct);
@@ -164,6 +179,13 @@ class ProductProvider with ChangeNotifier {
     String? existingImageUrl,
     File? newImageFile,
   }) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not authenticated';
+      notifyListeners();
+      return false;
+    }
+
     try {
       _isLoading = true;
       _errorMessage = '';
@@ -191,6 +213,7 @@ class ProductProvider with ChangeNotifier {
         imageUrl: imageUrl,
         createdAt: DateTime.now(), // Will be preserved from original
         updatedAt: DateTime.now(),
+        userId: userId, // Add userId
       );
 
       await _productService.updateProduct(product);

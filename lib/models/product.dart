@@ -9,6 +9,7 @@ class Product {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isActive;
+  final String userId; // Add this field
 
   Product({
     required this.id,
@@ -21,6 +22,7 @@ class Product {
     required this.createdAt,
     required this.updatedAt,
     this.isActive = true,
+    required this.userId, // Add this parameter
   });
 
   // Convert Product to Map for Firestore
@@ -36,6 +38,7 @@ class Product {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'isActive': isActive,
+      'userId': userId, // Add this field
     };
   }
 
@@ -52,6 +55,7 @@ class Product {
       createdAt: DateTime.parse(map['createdAt']),
       updatedAt: DateTime.parse(map['updatedAt']),
       isActive: map['isActive'] ?? true,
+      userId: map['userId'] ?? '', // Add this field
     );
   }
 
@@ -67,6 +71,7 @@ class Product {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isActive,
+    String? userId,
   }) {
     return Product(
       id: id ?? this.id,
@@ -79,6 +84,7 @@ class Product {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isActive: isActive ?? this.isActive,
+      userId: userId ?? this.userId,
     );
   }
 }

@@ -22,10 +22,11 @@ class ProductService {
     }
   }
 
-  // Read all products
-  Stream<List<Product>> getAllProducts() {
+  // Read all products for a specific user
+  Stream<List<Product>> getAllProducts(String userId) {
     return _firestore
         .collection(_collectionName)
+        .where('userId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
@@ -35,10 +36,11 @@ class ProductService {
     });
   }
 
-  // Read active products only
-  Stream<List<Product>> getActiveProducts() {
+  // Read active products only for a specific user
+  Stream<List<Product>> getActiveProducts(String userId) {
     return _firestore
         .collection(_collectionName)
+        .where('userId', isEqualTo: userId)
         .where('isActive', isEqualTo: true)
         .orderBy('createdAt', descending: true)
         .snapshots()
@@ -49,10 +51,11 @@ class ProductService {
     });
   }
 
-  // Read products by category
-  Stream<List<Product>> getProductsByCategory(String category) {
+  // Read products by category for a specific user
+  Stream<List<Product>> getProductsByCategory(String userId, String category) {
     return _firestore
         .collection(_collectionName)
+        .where('userId', isEqualTo: userId)
         .where('category', isEqualTo: category)
         .where('isActive', isEqualTo: true)
         .orderBy('createdAt', descending: true)
@@ -150,10 +153,11 @@ class ProductService {
     }
   }
 
-  // Search products by name
-  Stream<List<Product>> searchProducts(String query) {
+  // Search products by name for a specific user
+  Stream<List<Product>> searchProducts(String userId, String query) {
     return _firestore
         .collection(_collectionName)
+        .where('userId', isEqualTo: userId)
         .where('isActive', isEqualTo: true)
         .snapshots()
         .map((snapshot) {
@@ -166,10 +170,11 @@ class ProductService {
     });
   }
 
-  // Get low stock products
-  Stream<List<Product>> getLowStockProducts(int threshold) {
+  // Get low stock products for a specific user
+  Stream<List<Product>> getLowStockProducts(String userId, int threshold) {
     return _firestore
         .collection(_collectionName)
+        .where('userId', isEqualTo: userId)
         .where('isActive', isEqualTo: true)
         .where('stock', isLessThanOrEqualTo: threshold)
         .snapshots()

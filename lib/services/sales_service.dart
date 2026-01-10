@@ -21,10 +21,11 @@ class SalesService {
     }
   }
 
-  // Get all sales transactions
-  Stream<List<SalesTransaction>> getAllSalesTransactions() {
+  // Get all sales transactions for a specific user
+  Stream<List<SalesTransaction>> getAllSalesTransactions(String userId) {
     return _firestore
         .collection(_salesCollection)
+        .where('userId', isEqualTo: userId)
         .orderBy('transactionDate', descending: true)
         .snapshots()
         .map((snapshot) {
@@ -34,13 +35,15 @@ class SalesService {
     });
   }
 
-  // Get sales transactions by date range
+  // Get sales transactions by date range for a specific user
   Stream<List<SalesTransaction>> getSalesTransactionsByDateRange(
+    String userId,
     DateTime startDate,
     DateTime endDate,
   ) {
     return _firestore
         .collection(_salesCollection)
+        .where('userId', isEqualTo: userId)
         .where('transactionDate', 
           isGreaterThanOrEqualTo: startDate.toIso8601String())
         .where('transactionDate', 
@@ -71,23 +74,25 @@ class SalesService {
     }
   }
 
-  // Get today's sales
-  Stream<List<SalesTransaction>> getTodaySales() {
+  // Get today's sales for a specific user
+  Stream<List<SalesTransaction>> getTodaySales(String userId) {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
     final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
     
-    return getSalesTransactionsByDateRange(startOfDay, endOfDay);
+    return getSalesTransactionsByDateRange(userId, startOfDay, endOfDay);
   }
 
-  // Calculate sales statistics
+  // Calculate sales statistics for a specific user
   Future<Map<String, dynamic>> getSalesStats(
+    String userId,
     DateTime startDate,
     DateTime endDate,
   ) async {
     try {
       final snapshot = await _firestore
           .collection(_salesCollection)
+          .where('userId', isEqualTo: userId)
           .where('transactionDate', 
             isGreaterThanOrEqualTo: startDate.toIso8601String())
           .where('transactionDate', 
@@ -128,8 +133,9 @@ class SalesService {
     }
   }
 
-  // Get top selling products
+  // Get top selling products for a specific user
   Future<List<Map<String, dynamic>>> getTopSellingProducts(
+    String userId,
     DateTime startDate,
     DateTime endDate,
     {int limit = 10}
@@ -137,6 +143,7 @@ class SalesService {
     try {
       final snapshot = await _firestore
           .collection(_salesCollection)
+          .where('userId', isEqualTo: userId)
           .where('transactionDate', 
             isGreaterThanOrEqualTo: startDate.toIso8601String())
           .where('transactionDate', 

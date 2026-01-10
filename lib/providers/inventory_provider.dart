@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import '../models/inventory_movement_model.dart';
 import '../services/inventory_service.dart';
+import '../services/auth_service.dart';
 
 class InventoryProvider with ChangeNotifier {
   final InventoryService _inventoryService = InventoryService();
+  final AuthService _authService = AuthService();
   
   List<InventoryMovement> _movements = [];
   List<StockAlert> _activeAlerts = [];
@@ -17,12 +19,19 @@ class InventoryProvider with ChangeNotifier {
   String get errorMessage => _errorMessage;
   int get alertCount => _activeAlerts.length;
 
-  // Load all movements
+  // Load all movements for current user
   void loadMovements() {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not authenticated';
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
     notifyListeners();
 
-    _inventoryService.getAllMovements().listen(
+    _inventoryService.getAllMovements(userId).listen(
       (movementList) {
         _movements = movementList;
         _isLoading = false;
@@ -37,9 +46,16 @@ class InventoryProvider with ChangeNotifier {
     );
   }
 
-  // Load active alerts
+  // Load active alerts for current user
   void loadActiveAlerts() {
-    _inventoryService.getActiveAlerts().listen(
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not authenticated';
+      notifyListeners();
+      return;
+    }
+
+    _inventoryService.getActiveAlerts(userId).listen(
       (alertList) {
         _activeAlerts = alertList;
         notifyListeners();
@@ -100,9 +116,13 @@ class InventoryProvider with ChangeNotifier {
     return _inventoryService.getProductMovements(productId);
   }
 
-  // Get movements by type
+  // Get movements by type for current user
   Stream<List<InventoryMovement>> getMovementsByType(MovementType type) {
-    return _inventoryService.getMovementsByType(type);
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      return Stream.value([]);
+    }
+    return _inventoryService.getMovementsByType(userId, type);
   }
 
   // Resolve alert
@@ -117,13 +137,20 @@ class InventoryProvider with ChangeNotifier {
     }
   }
 
-  // Get movement statistics
+  // Get movement statistics for current user
   Future<Map<String, dynamic>?> getMovementStats(
     DateTime startDate,
     DateTime endDate,
   ) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not authenticated';
+      notifyListeners();
+      return null;
+    }
+
     try {
-      return await _inventoryService.getMovementStats(startDate, endDate);
+      return await _inventoryService.getMovementStats(userId, startDate, endDate);
     } catch (e) {
       _errorMessage = 'Failed to get stats: $e';
       notifyListeners();
@@ -131,9 +158,13 @@ class InventoryProvider with ChangeNotifier {
     }
   }
 
-  // Get all alerts stream
+  // Get all alerts stream for current user
   Stream<List<StockAlert>> getAllAlerts() {
-    return _inventoryService.getAllAlerts();
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      return Stream.value([]);
+    }
+    return _inventoryService.getAllAlerts(userId);
   }
 
   // Clear error

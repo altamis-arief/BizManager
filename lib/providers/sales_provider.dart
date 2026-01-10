@@ -48,12 +48,19 @@ class SalesProvider with ChangeNotifier {
     'Bank Transfer',
   ];
 
-  // Load all transactions
+  // Load all transactions for current user
   void loadTransactions() {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not authenticated';
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
     notifyListeners();
 
-    _salesService.getAllSalesTransactions().listen(
+    _salesService.getAllSalesTransactions(userId).listen(
       (transactionList) {
         _transactions = transactionList;
         _isLoading = false;
@@ -177,12 +184,17 @@ class SalesProvider with ChangeNotifier {
       return false;
     }
 
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not authenticated';
+      notifyListeners();
+      return false;
+    }
+
     try {
       _isLoading = true;
       _errorMessage = '';
       notifyListeners();
-
-      final userId = _authService.currentUser?.uid ?? 'unknown';
 
       // Create sales transaction
       final transaction = SalesTransaction(
@@ -240,13 +252,20 @@ class SalesProvider with ChangeNotifier {
     }
   }
 
-  // Get sales statistics
+  // Get sales statistics for current user
   Future<Map<String, dynamic>?> getSalesStats(
     DateTime startDate,
     DateTime endDate,
   ) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not authenticated';
+      notifyListeners();
+      return null;
+    }
+
     try {
-      return await _salesService.getSalesStats(startDate, endDate);
+      return await _salesService.getSalesStats(userId, startDate, endDate);
     } catch (e) {
       _errorMessage = 'Failed to get sales stats: $e';
       notifyListeners();
@@ -254,13 +273,20 @@ class SalesProvider with ChangeNotifier {
     }
   }
 
-  // Get top selling products
+  // Get top selling products for current user
   Future<List<Map<String, dynamic>>> getTopSellingProducts(
     DateTime startDate,
     DateTime endDate,
   ) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not authenticated';
+      notifyListeners();
+      return [];
+    }
+
     try {
-      return await _salesService.getTopSellingProducts(startDate, endDate);
+      return await _salesService.getTopSellingProducts(userId, startDate, endDate);
     } catch (e) {
       _errorMessage = 'Failed to get top selling products: $e';
       notifyListeners();
@@ -268,17 +294,25 @@ class SalesProvider with ChangeNotifier {
     }
   }
 
-  // Get today's sales stream
+  // Get today's sales stream for current user
   Stream<List<SalesTransaction>> getTodaySales() {
-    return _salesService.getTodaySales();
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      return Stream.value([]);
+    }
+    return _salesService.getTodaySales(userId);
   }
 
-  // Get sales by date range stream
+  // Get sales by date range stream for current user
   Stream<List<SalesTransaction>> getSalesByDateRange(
     DateTime startDate,
     DateTime endDate,
   ) {
-    return _salesService.getSalesTransactionsByDateRange(startDate, endDate);
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      return Stream.value([]);
+    }
+    return _salesService.getSalesTransactionsByDateRange(userId, startDate, endDate);
   }
 
   // Clear error

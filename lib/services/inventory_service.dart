@@ -20,6 +20,7 @@ class InventoryService {
         movement.productId,
         movement.productName,
         movement.newStock,
+        movement.userId,
       );
       
       return docRef.id;
@@ -42,10 +43,11 @@ class InventoryService {
     });
   }
 
-  // Get all movements
-  Stream<List<InventoryMovement>> getAllMovements() {
+  // Get all movements for a specific user
+  Stream<List<InventoryMovement>> getAllMovements(String userId) {
     return _firestore
         .collection(_movementsCollection)
+        .where('userId', isEqualTo: userId)
         .orderBy('movementDate', descending: true)
         .limit(100)
         .snapshots()
@@ -56,10 +58,11 @@ class InventoryService {
     });
   }
 
-  // Get movements by type
-  Stream<List<InventoryMovement>> getMovementsByType(MovementType type) {
+  // Get movements by type for a specific user
+  Stream<List<InventoryMovement>> getMovementsByType(String userId, MovementType type) {
     return _firestore
         .collection(_movementsCollection)
+        .where('userId', isEqualTo: userId)
         .where('movementType', isEqualTo: type.toString().split('.').last)
         .orderBy('movementDate', descending: true)
         .snapshots()
@@ -70,13 +73,15 @@ class InventoryService {
     });
   }
 
-  // Get movements by date range
+  // Get movements by date range for a specific user
   Stream<List<InventoryMovement>> getMovementsByDateRange(
+    String userId,
     DateTime startDate,
     DateTime endDate,
   ) {
     return _firestore
         .collection(_movementsCollection)
+        .where('userId', isEqualTo: userId)
         .where('movementDate', isGreaterThanOrEqualTo: startDate.toIso8601String())
         .where('movementDate', isLessThanOrEqualTo: endDate.toIso8601String())
         .orderBy('movementDate', descending: true)
@@ -93,6 +98,7 @@ class InventoryService {
     String productId,
     String productName,
     int currentStock,
+    String userId,
   ) async {
     const int threshold = 10;
     
@@ -101,6 +107,7 @@ class InventoryService {
       final existingAlerts = await _firestore
           .collection(_alertsCollection)
           .where('productId', isEqualTo: productId)
+          .where('userId', isEqualTo: userId)
           .where('isResolved', isEqualTo: false)
           .get();
 
@@ -115,9 +122,12 @@ class InventoryService {
           alertDate: DateTime.now(),
         );
 
+        final alertMap = alert.toMap();
+        alertMap['userId'] = userId; // Add userId to alert
+
         final docRef = await _firestore
             .collection(_alertsCollection)
-            .add(alert.toMap());
+            .add(alertMap);
         
         await docRef.update({'id': docRef.id});
       } else {
@@ -132,6 +142,7 @@ class InventoryService {
       final existingAlerts = await _firestore
           .collection(_alertsCollection)
           .where('productId', isEqualTo: productId)
+          .where('userId', isEqualTo: userId)
           .where('isResolved', isEqualTo: false)
           .get();
 
@@ -141,10 +152,11 @@ class InventoryService {
     }
   }
 
-  // Get active stock alerts
-  Stream<List<StockAlert>> getActiveAlerts() {
+  // Get active stock alerts for a specific user
+  Stream<List<StockAlert>> getActiveAlerts(String userId) {
     return _firestore
         .collection(_alertsCollection)
+        .where('userId', isEqualTo: userId)
         .where('isResolved', isEqualTo: false)
         .orderBy('alertDate', descending: true)
         .snapshots()
@@ -155,10 +167,11 @@ class InventoryService {
     });
   }
 
-  // Get all stock alerts
-  Stream<List<StockAlert>> getAllAlerts() {
+  // Get all stock alerts for a specific user
+  Stream<List<StockAlert>> getAllAlerts(String userId) {
     return _firestore
         .collection(_alertsCollection)
+        .where('userId', isEqualTo: userId)
         .orderBy('alertDate', descending: true)
         .snapshots()
         .map((snapshot) {
@@ -192,11 +205,16 @@ class InventoryService {
     }
   }
 
-  // Get movement statistics
-  Future<Map<String, dynamic>> getMovementStats(DateTime startDate, DateTime endDate) async {
+  // Get movement statistics for a specific user
+  Future<Map<String, dynamic>> getMovementStats(
+    String userId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
     try {
       final movements = await _firestore
           .collection(_movementsCollection)
+          .where('userId', isEqualTo: userId)
           .where('movementDate', isGreaterThanOrEqualTo: startDate.toIso8601String())
           .where('movementDate', isLessThanOrEqualTo: endDate.toIso8601String())
           .get();
