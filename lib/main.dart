@@ -51,7 +51,6 @@ class AuthWrapper extends StatelessWidget {
     return StreamBuilder(
       stream: authService.authStateChanges,
       builder: (context, snapshot) {
-        // Show loading indicator while checking auth state
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(
@@ -60,12 +59,10 @@ class AuthWrapper extends StatelessWidget {
           );
         }
 
-        // If user is logged in, show Dashboard
-        if (snapshot.hasData && snapshot.data != null) {
+        if (snapshot.hasData) {
           return const DashboardScreen();
         }
 
-        // If user is not logged in, show LoginScreen
         return const LoginScreen();
       },
     );
