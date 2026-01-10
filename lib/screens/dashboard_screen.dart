@@ -4,8 +4,10 @@ import '../services/auth_service.dart';
 import '../models/user_model.dart';
 import '../providers/product_provider.dart';
 import '../providers/inventory_provider.dart';
+import '../providers/sales_provider.dart';
 import 'products_list_screen.dart';
 import 'inventory_tracking_screen.dart';
+import 'sales_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -23,11 +25,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadUserData();
-    // Load products and inventory when dashboard initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProductProvider>().loadProducts();
       context.read<InventoryProvider>().loadMovements();
       context.read<InventoryProvider>().loadActiveAlerts();
+      context.read<SalesProvider>().loadTransactions();
     });
   }
 
@@ -73,7 +75,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: const Text('BizManager Dashboard'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
-          // Stock alerts badge
           Consumer<InventoryProvider>(
             builder: (context, provider, child) {
               return Stack(
@@ -123,6 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onPressed: () {
               context.read<ProductProvider>().loadProducts();
               context.read<InventoryProvider>().loadMovements();
+              context.read<SalesProvider>().loadTransactions();
               _loadUserData();
             },
             tooltip: 'Refresh',
@@ -142,6 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onRefresh: () async {
                     context.read<ProductProvider>().loadProducts();
                     context.read<InventoryProvider>().loadMovements();
+                    context.read<SalesProvider>().loadTransactions();
                     await _loadUserData();
                   },
                   child: SingleChildScrollView(
@@ -242,8 +245,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildQuickStats() {
-    return Consumer2<ProductProvider, InventoryProvider>(
-      builder: (context, productProvider, inventoryProvider, child) {
+    return Consumer3<ProductProvider, InventoryProvider, SalesProvider>(
+      builder: (context, productProvider, inventoryProvider, salesProvider, child) {
         final totalProducts = productProvider.products.length;
         final lowStockProducts = productProvider.getLowStockProducts(10).length;
         final outOfStock = productProvider.products.where((p) => p.stock == 0).length;
@@ -350,17 +353,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildStatCard(
-                    icon: Icons.sync_alt,
-                    title: 'Movements',
-                    value: inventoryProvider.movements.take(99).length.toString() + 
-                           (inventoryProvider.movements.length > 99 ? '+' : ''),
+                    icon: Icons.point_of_sale,
+                    title: 'Sales Today',
+                    value: salesProvider.transactions.take(99).length.toString() +
+                           (salesProvider.transactions.length > 99 ? '+' : ''),
                     color: Colors.purple,
-                    subtitle: 'Recent activity',
+                    subtitle: 'Transactions',
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const InventoryTrackingScreen(),
+                          builder: (context) => const SalesScreen(),
                         ),
                       );
                     },
@@ -487,16 +490,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
           title: 'Sales Management',
           description: '',
           color: Colors.green,
-          isActive: false,
-          badge: 'Soon',
+          isActive: true,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SalesScreen(),
+              ),
+            );
+          },
         ),
         _buildModuleCard(
           icon: Icons.analytics,
           title: 'Reports & Analytics',
           description: '',
           color: Colors.purple,
-          isActive: false,
-          badge: 'Soon',
+          isActive: true,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SalesScreen(),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -649,6 +666,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const Divider(height: 1),
               ListTile(
                 leading: CircleAvatar(
+                  backgroundColor: Colors.green.withOpacity(0.1),
+                  child: const Icon(Icons.point_of_sale, color: Colors.green),
+                ),
+                title: const Text('New Sale'),
+                subtitle: const Text('Process a new sales transaction'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SalesScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: CircleAvatar(
                   backgroundColor: Colors.orange.withOpacity(0.1),
                   child: const Icon(Icons.inventory, color: Colors.orange),
                 ),
@@ -669,24 +704,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const ProductsListScreen(),
-                    ),
-                  );
-                },
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.purple.withOpacity(0.1),
-                  child: const Icon(Icons.sync_alt, color: Colors.purple),
-                ),
-                title: const Text('View Inventory Movements'),
-                subtitle: const Text('Track all stock changes'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const InventoryTrackingScreen(),
                     ),
                   );
                 },
