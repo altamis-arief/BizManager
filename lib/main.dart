@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'providers/product_provider.dart';
+import 'providers/inventory_provider.dart';
 import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => InventoryProvider()),
       ],
       child: MaterialApp(
         title: 'BizManager',

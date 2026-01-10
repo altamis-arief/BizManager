@@ -1,10 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import '../models/product.dart';
+import '../models/inventory_movement_model.dart';
 import '../services/product_service.dart';
+import '../services/inventory_service.dart';
+import '../services/auth_service.dart';
 
 class ProductProvider with ChangeNotifier {
   final ProductService _productService = ProductService();
+  final InventoryService _inventoryService = InventoryService();
+  final AuthService _authService = AuthService();
   
   List<Product> _products = [];
   List<Product> _filteredProducts = [];
@@ -124,6 +129,19 @@ class ProductProvider with ChangeNotifier {
         await _productService.updateProduct(updatedProduct);
       }
 
+      // Record initial stock as inventory movement
+      if (stock > 0) {
+        await _recordInventoryMovement(
+          productId: productId,
+          productName: name,
+          movementType: MovementType.stockIn,
+          quantity: stock,
+          previousStock: 0,
+          newStock: stock,
+          notes: 'Initial stock on product creation',
+        );
+      }
+
       _isLoading = false;
       notifyListeners();
       return true;
@@ -208,16 +226,79 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
-  // Update stock
+  // Update stock with automatic inventory tracking
   Future<bool> updateStock(String id, int newStock) async {
     try {
+      // Get current product to know previous stock
+      final product = await _productService.getProductById(id);
+      if (product == null) {
+        _errorMessage = 'Product not found';
+        notifyListeners();
+        return false;
+      }
+
+      final previousStock = product.stock;
+      final difference = newStock - previousStock;
+
+      // Update the stock
       await _productService.updateStock(id, newStock);
+
+      // Determine movement type and record inventory movement
+      MovementType movementType;
+      if (difference > 0) {
+        movementType = MovementType.stockIn;
+      } else if (difference < 0) {
+        movementType = MovementType.stockOut;
+      } else {
+        return true; // No change, no need to record
+      }
+
+      await _recordInventoryMovement(
+        productId: id,
+        productName: product.name,
+        movementType: movementType,
+        quantity: difference.abs(),
+        previousStock: previousStock,
+        newStock: newStock,
+        notes: 'Manual stock adjustment',
+      );
+
       return true;
     } catch (e) {
       _errorMessage = 'Failed to update stock: $e';
       notifyListeners();
       return false;
     }
+  }
+
+  // Record inventory movement helper
+  Future<void> _recordInventoryMovement({
+    required String productId,
+    required String productName,
+    required MovementType movementType,
+    required int quantity,
+    required int previousStock,
+    required int newStock,
+    String? notes,
+    String? referenceId,
+  }) async {
+    final userId = _authService.currentUser?.uid ?? 'unknown';
+
+    final movement = InventoryMovement(
+      id: '',
+      productId: productId,
+      productName: productName,
+      movementType: movementType,
+      quantity: quantity,
+      previousStock: previousStock,
+      newStock: newStock,
+      userId: userId,
+      movementDate: DateTime.now(),
+      notes: notes,
+      referenceId: referenceId,
+    );
+
+    await _inventoryService.recordMovement(movement);
   }
 
   // Get product by ID

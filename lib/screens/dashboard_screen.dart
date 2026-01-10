@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
 import '../providers/product_provider.dart';
+import '../providers/inventory_provider.dart';
 import 'products_list_screen.dart';
+import 'inventory_tracking_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,9 +23,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadUserData();
-    // Load products when dashboard initializes
+    // Load products and inventory when dashboard initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProductProvider>().loadProducts();
+      context.read<InventoryProvider>().loadMovements();
+      context.read<InventoryProvider>().loadActiveAlerts();
     });
   }
 
@@ -69,10 +73,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: const Text('BizManager Dashboard'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
+          // Stock alerts badge
+          Consumer<InventoryProvider>(
+            builder: (context, provider, child) {
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const InventoryTrackingScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  if (provider.alertCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Text(
+                          '${provider.alertCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
               context.read<ProductProvider>().loadProducts();
+              context.read<InventoryProvider>().loadMovements();
               _loadUserData();
             },
             tooltip: 'Refresh',
@@ -91,6 +141,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : RefreshIndicator(
                   onRefresh: () async {
                     context.read<ProductProvider>().loadProducts();
+                    context.read<InventoryProvider>().loadMovements();
                     await _loadUserData();
                   },
                   child: SingleChildScrollView(
@@ -191,11 +242,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildQuickStats() {
-    return Consumer<ProductProvider>(
-      builder: (context, provider, child) {
-        final totalProducts = provider.products.length;
-        final lowStockProducts = provider.getLowStockProducts(10).length;
-        final outOfStock = provider.products.where((p) => p.stock == 0).length;
+    return Consumer2<ProductProvider, InventoryProvider>(
+      builder: (context, productProvider, inventoryProvider, child) {
+        final totalProducts = productProvider.products.length;
+        final lowStockProducts = productProvider.getLowStockProducts(10).length;
+        final outOfStock = productProvider.products.where((p) => p.stock == 0).length;
+        final activeAlerts = inventoryProvider.alertCount;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,7 +262,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       .titleLarge
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                if (lowStockProducts > 0)
+                if (activeAlerts > 0)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -229,7 +281,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '$lowStockProducts Alert${lowStockProducts > 1 ? 's' : ''}',
+                          '$activeAlerts Alert${activeAlerts > 1 ? 's' : ''}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -298,11 +350,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildStatCard(
-                    icon: Icons.shopping_cart,
-                    title: 'Sales Today',
-                    value: 'RM 0.00',
-                    color: Colors.green,
-                    subtitle: 'Coming soon',
+                    icon: Icons.sync_alt,
+                    title: 'Movements',
+                    value: inventoryProvider.movements.take(99).length.toString() + 
+                           (inventoryProvider.movements.length > 99 ? '+' : ''),
+                    color: Colors.purple,
+                    subtitle: 'Recent activity',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const InventoryTrackingScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -393,8 +454,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         _buildModuleCard(
           icon: Icons.inventory_2,
-          title: 'Product\nManagement',
-          description: 'Manage inventory',
+          title: 'Product Management',
+          description: '',
           color: Colors.blue,
           isActive: true,
           onTap: () {
@@ -408,24 +469,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         _buildModuleCard(
           icon: Icons.insert_chart,
-          title: 'Inventory\nTracking',
-          description: 'Track stock movements',
+          title: 'Inventory Tracking',
+          description: '',
           color: Colors.orange,
-          isActive: false,
-          badge: 'Soon',
+          isActive: true,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const InventoryTrackingScreen(),
+              ),
+            );
+          },
         ),
         _buildModuleCard(
           icon: Icons.point_of_sale,
-          title: 'Sales\nManagement',
-          description: 'Process sales',
+          title: 'Sales Management',
+          description: '',
           color: Colors.green,
           isActive: false,
           badge: 'Soon',
         ),
         _buildModuleCard(
           icon: Icons.analytics,
-          title: 'Reports &\nAnalytics',
-          description: 'View insights',
+          title: 'Reports & Analytics',
+          description: '',
           color: Colors.purple,
           isActive: false,
           badge: 'Soon',
@@ -608,17 +676,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const Divider(height: 1),
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Colors.green.withOpacity(0.1),
-                  child: const Icon(Icons.point_of_sale, color: Colors.green),
+                  backgroundColor: Colors.purple.withOpacity(0.1),
+                  child: const Icon(Icons.sync_alt, color: Colors.purple),
                 ),
-                title: const Text('Process Sale'),
-                subtitle: const Text('Coming soon'),
+                title: const Text('View Inventory Movements'),
+                subtitle: const Text('Track all stock changes'),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Sales module coming soon!'),
-                      duration: Duration(seconds: 2),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const InventoryTrackingScreen(),
                     ),
                   );
                 },
