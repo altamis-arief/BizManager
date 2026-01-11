@@ -82,10 +82,20 @@ The objectives of BizManager are to:
 
 Key Screens:
 - Login / Register Screen
+<img width="385" height="860" alt="image" src="https://github.com/user-attachments/assets/6f4d39ca-2b3b-4929-8e94-058b9b574ca1" />
+
 - Dashboard Screen
+<img width="388" height="861" alt="image" src="https://github.com/user-attachments/assets/eac0d0fa-541c-4d74-bf38-c16f94b3111e" />
+
 - Product List Screen
+<img width="388" height="860" alt="image" src="https://github.com/user-attachments/assets/e613d670-6843-4f15-8235-866e551fcda8" />
+
 - Add / Edit Product Screen
+<img width="386" height="861" alt="image" src="https://github.com/user-attachments/assets/7a26a85d-2532-4b91-a391-b65219f8ef08" />
+
 - Sales Transaction Screen
+<img width="387" height="860" alt="image" src="https://github.com/user-attachments/assets/7689ff72-1e43-477a-b845-2556d7dde2c7" />
+
 
 ---
 
