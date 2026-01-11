@@ -521,140 +521,223 @@ class _SalesScreenState extends State<SalesScreen> {
     );
   }
 
-  Widget _buildCartSummary(SalesProvider provider) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Subtotal (${provider.totalItems} items):',
-                style: const TextStyle(fontSize: 15),
-              ),
-              Text(
-                'RM ${provider.subtotal.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _discountController,
-            decoration: InputDecoration(
-              labelText: 'Discount (RM)',
-              prefixIcon: const Icon(Icons.discount),
-              border: const OutlineInputBorder(),
-              isDense: true,
-              filled: true,
-              fillColor: Colors.grey[50],
+// Add this to _buildCartSummary in SalesScreen
+Widget _buildCartSummary(SalesProvider provider) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.3),
+          spreadRadius: 1,
+          blurRadius: 5,
+          offset: const Offset(0, -2),
+        ),
+      ],
+    ),
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Subtotal (${provider.totalItems} items):',
+              style: const TextStyle(fontSize: 15),
             ),
-            keyboardType: TextInputType.number,
-            onChanged: (value) {
-              final discount = double.tryParse(value) ?? 0;
-              provider.setDiscount(discount);
-            },
-          ),
-          if (provider.discount > 0) ...[
-            const SizedBox(height: 8),
+            Text(
+              'RM ${provider.subtotal.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Discount:',
-                  style: TextStyle(color: Colors.red, fontSize: 14),
+                  'Total Cost:',
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
                 ),
-                Text(
-                  '- RM ${provider.discount.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: 'Your cost for these items',
+                  child: Icon(Icons.info_outline, size: 14, color: Colors.grey[400]),
                 ),
               ],
             ),
+            Text(
+              'RM ${provider.totalCost.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.grey,
+              ),
+            ),
           ],
-          const Divider(height: 24, thickness: 2),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  'Expected Profit:',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: 'Profit before discount',
+                  child: Icon(Icons.info_outline, size: 14, color: Colors.grey[400]),
+                ),
+              ],
+            ),
+            Text(
+              'RM ${provider.expectedProfit.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: provider.expectedProfit >= 0 ? Colors.green : Colors.red,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _discountController,
+          decoration: InputDecoration(
+            labelText: 'Discount (RM)',
+            prefixIcon: const Icon(Icons.discount),
+            border: const OutlineInputBorder(),
+            isDense: true,
+            filled: true,
+            fillColor: Colors.grey[50],
+          ),
+          keyboardType: TextInputType.number,
+          onChanged: (value) {
+            final discount = double.tryParse(value) ?? 0;
+            provider.setDiscount(discount);
+          },
+        ),
+        if (provider.discount > 0) ...[
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Total:',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                'Discount:',
+                style: TextStyle(color: Colors.red, fontSize: 14),
               ),
               Text(
-                'RM ${provider.total.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
+                '- RM ${provider.discount.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            value: provider.selectedPaymentMethod,
-            decoration: InputDecoration(
-              labelText: 'Payment Method',
-              prefixIcon: const Icon(Icons.payment),
-              border: const OutlineInputBorder(),
-              isDense: true,
-              filled: true,
-              fillColor: Colors.grey[50],
-            ),
-            items: provider.paymentMethods.map((method) {
-              return DropdownMenuItem(
-                value: method,
-                child: Text(method),
-              );
-            }).toList(),
-            onChanged: (value) {
-              if (value != null) {
-                provider.setPaymentMethod(value);
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: provider.isLoading ? null : _processSale,
-              icon: const Icon(Icons.check_circle, size: 24),
-              label: const Text(
-                'Complete Sale',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    'Actual Profit:',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 4),
+                  Tooltip(
+                    message: 'Profit after discount',
+                    child: Icon(Icons.info_outline, size: 14, color: Colors.grey[400]),
+                  ),
+                ],
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
+              Text(
+                'RM ${(provider.expectedProfit - provider.discount).toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: (provider.expectedProfit - provider.discount) >= 0 
+                      ? Colors.green 
+                      : Colors.red,
+                ),
               ),
-            ),
+            ],
           ),
         ],
-      ),
-    );
-  }
+        const Divider(height: 24, thickness: 2),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Total:',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'RM ${provider.total.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          value: provider.selectedPaymentMethod,
+          decoration: InputDecoration(
+            labelText: 'Payment Method',
+            prefixIcon: const Icon(Icons.payment),
+            border: const OutlineInputBorder(),
+            isDense: true,
+            filled: true,
+            fillColor: Colors.grey[50],
+          ),
+          items: provider.paymentMethods.map((method) {
+            return DropdownMenuItem(
+              value: method,
+              child: Text(method),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              provider.setPaymentMethod(value);
+            }
+          },
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton.icon(
+            onPressed: provider.isLoading ? null : _processSale,
+            icon: const Icon(Icons.check_circle, size: 24),
+            label: const Text(
+              'Complete Sale',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   void _showAddToCartDialog(Product product) {
     final quantityController = TextEditingController(text: '1');

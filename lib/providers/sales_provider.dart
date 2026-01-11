@@ -40,6 +40,16 @@ class SalesProvider with ChangeNotifier {
     return _cartItems.fold(0, (sum, item) => sum + item.quantity);
   }
 
+  // Add getter for total cost
+  double get totalCost {
+    return _cartItems.fold(0, (sum, item) => sum + item.totalCost);
+  }
+
+  // Add getter for expected profit
+  double get expectedProfit {
+    return subtotal - totalCost;
+  }
+
   // Payment methods
   final List<String> paymentMethods = [
     'Cash',
@@ -109,7 +119,9 @@ class SalesProvider with ChangeNotifier {
         productName: product.name,
         quantity: newQuantity,
         unitPrice: product.price,
+        unitCost: product.cost,
         totalPrice: product.price * newQuantity,
+        totalCost: product.cost * newQuantity,
       );
     } else {
       // Add new item
@@ -118,7 +130,9 @@ class SalesProvider with ChangeNotifier {
         productName: product.name,
         quantity: quantity,
         unitPrice: product.price,
+        unitCost: product.cost,
         totalPrice: product.price * quantity,
+        totalCost: product.cost * quantity,
       ));
     }
 
@@ -142,7 +156,9 @@ class SalesProvider with ChangeNotifier {
         productName: item.productName,
         quantity: newQuantity,
         unitPrice: item.unitPrice,
+        unitCost: item.unitCost,
         totalPrice: item.unitPrice * newQuantity,
+        totalCost: item.unitCost * newQuantity,
       );
     }
 
@@ -196,12 +212,13 @@ class SalesProvider with ChangeNotifier {
       _errorMessage = '';
       notifyListeners();
 
-      // Create sales transaction
+      // Create sales transaction with cost tracking
       final transaction = SalesTransaction(
         id: '',
         userId: userId,
         items: _cartItems,
         totalAmount: subtotal,
+        totalCost: totalCost,
         discount: _discount,
         finalAmount: total,
         paymentMethod: _selectedPaymentMethod,

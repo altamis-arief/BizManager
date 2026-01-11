@@ -20,6 +20,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
+  final _costController = TextEditingController(); // Add cost controller
   final _stockController = TextEditingController();
   
   String _selectedCategory = 'Electronics';
@@ -36,6 +37,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       _nameController.text = widget.product!.name;
       _descriptionController.text = widget.product!.description;
       _priceController.text = widget.product!.price.toString();
+      _costController.text = widget.product!.cost.toString(); // Set cost value
       _stockController.text = widget.product!.stock.toString();
       _selectedCategory = widget.product!.category;
       _existingImageUrl = widget.product!.imageUrl;
@@ -47,8 +49,24 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _nameController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
+    _costController.dispose();
     _stockController.dispose();
     super.dispose();
+  }
+
+  // Calculate profit margin percentage
+  double get _profitMargin {
+    final price = double.tryParse(_priceController.text) ?? 0;
+    final cost = double.tryParse(_costController.text) ?? 0;
+    if (price == 0) return 0;
+    return ((price - cost) / price) * 100;
+  }
+
+  // Calculate profit per unit
+  double get _profitPerUnit {
+    final price = double.tryParse(_priceController.text) ?? 0;
+    final cost = double.tryParse(_costController.text) ?? 0;
+    return price - cost;
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -135,6 +153,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
         price: double.parse(_priceController.text),
+        cost: double.parse(_costController.text), // Add cost
         stock: int.parse(_stockController.text),
         category: _selectedCategory,
         imageFile: _imageFile,
@@ -146,6 +165,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
         price: double.parse(_priceController.text),
+        cost: double.parse(_costController.text), // Add cost
         stock: int.parse(_stockController.text),
         category: _selectedCategory,
         existingImageUrl: _existingImageUrl,
@@ -279,9 +299,37 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     
                     const SizedBox(height: 16),
                     
-                    // Price and Stock Row
+                    // Cost and Price Row
                     Row(
                       children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _costController,
+                            decoration: const InputDecoration(
+                              labelText: 'Cost (RM) *',
+                              hintText: '0.00',
+                              prefixIcon: Icon(Icons.money_off),
+                              border: OutlineInputBorder(),
+                              helperText: 'Your cost price',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                            ],
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Required';
+                              }
+                              final cost = double.tryParse(value);
+                              if (cost == null || cost < 0) {
+                                return 'Invalid';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) => setState(() {}),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: TextFormField(
                             controller: _priceController,
@@ -290,6 +338,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                               hintText: '0.00',
                               prefixIcon: Icon(Icons.attach_money),
                               border: OutlineInputBorder(),
+                              helperText: 'Selling price',
                             ),
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             inputFormatters: [
@@ -301,39 +350,101 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                               }
                               final price = double.tryParse(value);
                               if (price == null || price <= 0) {
-                                return 'Invalid price';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _stockController,
-                            decoration: const InputDecoration(
-                              labelText: 'Stock *',
-                              hintText: '0',
-                              prefixIcon: Icon(Icons.inventory),
-                              border: OutlineInputBorder(),
-                            ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Required';
-                              }
-                              final stock = int.tryParse(value);
-                              if (stock == null || stock < 0) {
                                 return 'Invalid';
                               }
+                              final cost = double.tryParse(_costController.text) ?? 0;
+                              if (price < cost) {
+                                return 'Below cost!';
+                              }
                               return null;
                             },
+                            onChanged: (value) => setState(() {}),
                           ),
                         ),
                       ],
+                    ),
+                    
+                    const SizedBox(height: 8),
+                    
+                    // Profit Margin Display
+                    if (_priceController.text.isNotEmpty && _costController.text.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: _profitPerUnit >= 0 
+                              ? Colors.green.withOpacity(0.1) 
+                              : Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _profitPerUnit >= 0 ? Colors.green : Colors.red,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Profit per unit:',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                Text(
+                                  'RM ${_profitPerUnit.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: _profitPerUnit >= 0 ? Colors.green : Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Profit margin:',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                Text(
+                                  '${_profitMargin.toStringAsFixed(1)}%',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: _profitPerUnit >= 0 ? Colors.green : Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Stock Field
+                    TextFormField(
+                      controller: _stockController,
+                      decoration: const InputDecoration(
+                        labelText: 'Stock *',
+                        hintText: '0',
+                        prefixIcon: Icon(Icons.inventory),
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        final stock = int.tryParse(value);
+                        if (stock == null || stock < 0) {
+                          return 'Invalid';
+                        }
+                        return null;
+                      },
                     ),
                     
                     const SizedBox(height: 24),
