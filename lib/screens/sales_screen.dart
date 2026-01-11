@@ -78,27 +78,64 @@ class _SalesScreenState extends State<SalesScreen> {
               ],
             );
           } else {
-            return DefaultTabController(
-              length: 2,
-              child: Column(
-                children: [
-                  TabBar(
-                    labelColor: Theme.of(context).colorScheme.primary,
-                    tabs: const [
-                      Tab(icon: Icon(Icons.inventory_2), text: 'Products'),
-                      Tab(icon: Icon(Icons.shopping_cart), text: 'Cart'),
+            return Consumer<SalesProvider>(
+              builder: (context, salesProvider, child) {
+                return DefaultTabController(
+                  length: 2,
+                  child: Column(
+                    children: [
+                      TabBar(
+                        labelColor: Theme.of(context).colorScheme.primary,
+                        tabs: [
+                          const Tab(icon: Icon(Icons.inventory_2), text: 'Products'),
+                          Tab(
+                            icon: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                const Icon(Icons.shopping_cart),
+                                if (salesProvider.cartItems.isNotEmpty)
+                                  Positioned(
+                                    right: -8,
+                                    top: -8,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 18,
+                                        minHeight: 18,
+                                      ),
+                                      child: Text(
+                                        '${salesProvider.totalItems}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            text: 'Cart',
+                          ),
+                        ],
+                      ),
+                      Expanded(
+                        child: TabBarView(
+                          children: [
+                            _buildProductList(),
+                            _buildCart(),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        _buildProductList(),
-                        _buildCart(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             );
           }
         },
@@ -621,74 +658,190 @@ class _SalesScreenState extends State<SalesScreen> {
 
   void _showAddToCartDialog(Product product) {
     final quantityController = TextEditingController(text: '1');
+    int quantity = 1;
     
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(product.name),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Price: RM ${product.price.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(product.name),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Price: RM ${product.price.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Available Stock: ${product.stock}',
+                  style: TextStyle(color: Colors.grey[700]),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Quantity',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    // Minus button
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.remove),
+                        onPressed: () {
+                          if (quantity > 1) {
+                            setState(() {
+                              quantity--;
+                              quantityController.text = quantity.toString();
+                            });
+                          }
+                        },
+                        color: Colors.red,
+                        padding: const EdgeInsets.all(8),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Quantity input field
+                    Expanded(
+                      child: TextField(
+                        controller: quantityController,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        onChanged: (value) {
+                          final newQty = int.tryParse(value) ?? 1;
+                          if (newQty > 0 && newQty <= product.stock) {
+                            setState(() {
+                              quantity = newQty;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Plus button
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () {
+                          if (quantity < product.stock) {
+                            setState(() {
+                              quantity++;
+                              quantityController.text = quantity.toString();
+                            });
+                          }
+                        },
+                        color: Colors.green,
+                        padding: const EdgeInsets.all(8),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Total preview
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Subtotal:',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'RM ${(product.price * quantity).toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Available Stock: ${product.stock}',
-              style: TextStyle(color: Colors.grey[700]),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: quantityController,
-              decoration: const InputDecoration(
-                labelText: 'Quantity',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.shopping_basket),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancel'),
               ),
-              keyboardType: TextInputType.number,
-              autofocus: true,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final quantity = int.tryParse(quantityController.text) ?? 0;
-              if (quantity > 0 && mounted) {
-                final provider = context.read<SalesProvider>();
-                final success = await provider.addToCart(product, quantity);
-                
-                if (mounted) {
-                  Navigator.of(dialogContext).pop();
-                  
-                  if (!success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(provider.errorMessage),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${product.name} added to cart'),
-                        backgroundColor: Colors.green,
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final finalQty = int.tryParse(quantityController.text) ?? quantity;
+                  if (finalQty > 0 && mounted) {
+                    final provider = this.context.read<SalesProvider>();
+                    final success = await provider.addToCart(product, finalQty);
+                    
+                    if (mounted) {
+                      Navigator.of(dialogContext).pop();
+                      
+                      if (!success) {
+                        ScaffoldMessenger.of(this.context).showSnackBar(
+                          SnackBar(
+                            content: Text(provider.errorMessage),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(this.context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.check_circle, color: Colors.white),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text('${product.name} ($finalQty) added to cart'),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: Colors.green,
+                            duration: const Duration(seconds: 2),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    }
                   }
-                }
-              }
-            },
-            child: const Text('Add to Cart'),
-          ),
-        ],
+                },
+                icon: const Icon(Icons.add_shopping_cart),
+                label: const Text('Add to Cart'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
