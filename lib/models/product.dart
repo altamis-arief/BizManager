@@ -3,27 +3,40 @@ class Product {
   final String name;
   final String description;
   final double price;
+  final double cost; // Add cost field
   final int stock;
   final String category;
   final String? imageUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isActive;
-  final String userId; // Add this field
+  final String userId;
 
   Product({
     required this.id,
     required this.name,
     required this.description,
     required this.price,
+    required this.cost, // Add required cost
     required this.stock,
     required this.category,
     this.imageUrl,
     required this.createdAt,
     required this.updatedAt,
     this.isActive = true,
-    required this.userId, // Add this parameter
+    required this.userId,
   });
+
+  // Calculate profit margin percentage
+  double get profitMargin {
+    if (price == 0) return 0;
+    return ((price - cost) / price) * 100;
+  }
+
+  // Calculate profit amount per unit
+  double get profitPerUnit {
+    return price - cost;
+  }
 
   // Convert Product to Map for Firestore
   Map<String, dynamic> toMap() {
@@ -32,13 +45,14 @@ class Product {
       'name': name,
       'description': description,
       'price': price,
+      'cost': cost, // Add cost to map
       'stock': stock,
       'category': category,
       'imageUrl': imageUrl,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'isActive': isActive,
-      'userId': userId, // Add this field
+      'userId': userId,
     };
   }
 
@@ -49,13 +63,14 @@ class Product {
       name: map['name'] ?? '',
       description: map['description'] ?? '',
       price: (map['price'] ?? 0).toDouble(),
+      cost: (map['cost'] ?? 0).toDouble(), // Add cost from map
       stock: map['stock'] ?? 0,
       category: map['category'] ?? '',
       imageUrl: map['imageUrl'],
       createdAt: DateTime.parse(map['createdAt']),
       updatedAt: DateTime.parse(map['updatedAt']),
       isActive: map['isActive'] ?? true,
-      userId: map['userId'] ?? '', // Add this field
+      userId: map['userId'] ?? '',
     );
   }
 
@@ -65,6 +80,7 @@ class Product {
     String? name,
     String? description,
     double? price,
+    double? cost,
     int? stock,
     String? category,
     String? imageUrl,
@@ -78,6 +94,7 @@ class Product {
       name: name ?? this.name,
       description: description ?? this.description,
       price: price ?? this.price,
+      cost: cost ?? this.cost,
       stock: stock ?? this.stock,
       category: category ?? this.category,
       imageUrl: imageUrl ?? this.imageUrl,

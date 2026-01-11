@@ -84,106 +84,122 @@ class SalesService {
   }
 
   // Calculate sales statistics for a specific user
-  Future<Map<String, dynamic>> getSalesStats(
-    String userId,
-    DateTime startDate,
-    DateTime endDate,
-  ) async {
-    try {
-      final snapshot = await _firestore
-          .collection(_salesCollection)
-          .where('userId', isEqualTo: userId)
-          .where('transactionDate', 
-            isGreaterThanOrEqualTo: startDate.toIso8601String())
-          .where('transactionDate', 
-            isLessThanOrEqualTo: endDate.toIso8601String())
-          .get();
+Future<Map<String, dynamic>> getSalesStats(
+  String userId,
+  DateTime startDate,
+  DateTime endDate,
+) async {
+  try {
+    final snapshot = await _firestore
+        .collection(_salesCollection)
+        .where('userId', isEqualTo: userId)
+        .where('transactionDate', 
+          isGreaterThanOrEqualTo: startDate.toIso8601String())
+        .where('transactionDate', 
+          isLessThanOrEqualTo: endDate.toIso8601String())
+        .get();
 
-      double totalRevenue = 0;
-      double totalDiscount = 0;
-      int totalTransactions = snapshot.docs.length;
-      int totalItemsSold = 0;
-      Map<String, int> paymentMethods = {};
+    double totalRevenue = 0;
+    double totalCost = 0; // Add total cost
+    double totalDiscount = 0;
+    int totalTransactions = snapshot.docs.length;
+    int totalItemsSold = 0;
+    Map<String, int> paymentMethods = {};
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        totalRevenue += (data['finalAmount'] ?? 0).toDouble();
-        totalDiscount += (data['discount'] ?? 0).toDouble();
-        
-        final items = data['items'] as List<dynamic>;
-        for (var item in items) {
-          totalItemsSold += (item['quantity'] ?? 0) as int;
-        }
-
-        final method = data['paymentMethod'] ?? 'Unknown';
-        paymentMethods[method] = (paymentMethods[method] ?? 0) + 1;
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      totalRevenue += (data['finalAmount'] ?? 0).toDouble();
+      totalCost += (data['totalCost'] ?? 0).toDouble(); // Add cost
+      totalDiscount += (data['discount'] ?? 0).toDouble();
+      
+      final items = data['items'] as List<dynamic>;
+      for (var item in items) {
+        totalItemsSold += (item['quantity'] ?? 0) as int;
       }
 
-      return {
-        'totalRevenue': totalRevenue,
-        'totalDiscount': totalDiscount,
-        'totalTransactions': totalTransactions,
-        'totalItemsSold': totalItemsSold,
-        'averageTransactionValue': 
-          totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
-        'paymentMethods': paymentMethods,
-      };
-    } catch (e) {
-      throw Exception('Failed to calculate sales stats: $e');
+      final method = data['paymentMethod'] ?? 'Unknown';
+      paymentMethods[method] = (paymentMethods[method] ?? 0) + 1;
     }
+
+    final actualProfit = totalRevenue - totalCost;
+    final profitMargin = totalRevenue > 0 ? (actualProfit / totalRevenue) * 100 : 0;
+
+    return {
+      'totalRevenue': totalRevenue,
+      'totalCost': totalCost,
+      'actualProfit': actualProfit,
+      'profitMargin': profitMargin,
+      'totalDiscount': totalDiscount,
+      'totalTransactions': totalTransactions,
+      'totalItemsSold': totalItemsSold,
+      'averageTransactionValue': 
+        totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
+      'averageProfit':
+        totalTransactions > 0 ? actualProfit / totalTransactions : 0,
+      'paymentMethods': paymentMethods,
+    };
+  } catch (e) {
+    throw Exception('Failed to calculate sales stats: $e');
   }
+}
 
   // Get top selling products for a specific user
-  Future<List<Map<String, dynamic>>> getTopSellingProducts(
-    String userId,
-    DateTime startDate,
-    DateTime endDate,
-    {int limit = 10}
-  ) async {
-    try {
-      final snapshot = await _firestore
-          .collection(_salesCollection)
-          .where('userId', isEqualTo: userId)
-          .where('transactionDate', 
-            isGreaterThanOrEqualTo: startDate.toIso8601String())
-          .where('transactionDate', 
-            isLessThanOrEqualTo: endDate.toIso8601String())
-          .get();
+Future<List<Map<String, dynamic>>> getTopSellingProducts(
+  String userId,
+  DateTime startDate,
+  DateTime endDate,
+  {int limit = 10}
+) async {
+  try {
+    final snapshot = await _firestore
+        .collection(_salesCollection)
+        .where('userId', isEqualTo: userId)
+        .where('transactionDate', 
+          isGreaterThanOrEqualTo: startDate.toIso8601String())
+        .where('transactionDate', 
+          isLessThanOrEqualTo: endDate.toIso8601String())
+        .get();
 
-      Map<String, Map<String, dynamic>> productSales = {};
+    Map<String, Map<String, dynamic>> productSales = {};
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        final items = data['items'] as List<dynamic>;
-        
-        for (var item in items) {
-          final productId = item['productId'];
-          final productName = item['productName'];
-          final quantity = item['quantity'] as int;
-          final totalPrice = (item['totalPrice'] ?? 0).toDouble();
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final items = data['items'] as List<dynamic>;
+      
+      for (var item in items) {
+        final productId = item['productId'];
+        final productName = item['productName'];
+        final quantity = item['quantity'] as int;
+        final totalPrice = (item['totalPrice'] ?? 0).toDouble();
+        final totalCost = (item['totalCost'] ?? 0).toDouble();
+        final profit = totalPrice - totalCost;
 
-          if (productSales.containsKey(productId)) {
-            productSales[productId]!['quantity'] += quantity;
-            productSales[productId]!['revenue'] += totalPrice;
-          } else {
-            productSales[productId] = {
-              'productId': productId,
-              'productName': productName,
-              'quantity': quantity,
-              'revenue': totalPrice,
-            };
-          }
+        if (productSales.containsKey(productId)) {
+          productSales[productId]!['quantity'] += quantity;
+          productSales[productId]!['revenue'] += totalPrice;
+          productSales[productId]!['cost'] += totalCost;
+          productSales[productId]!['profit'] += profit;
+        } else {
+          productSales[productId] = {
+            'productId': productId,
+            'productName': productName,
+            'quantity': quantity,
+            'revenue': totalPrice,
+            'cost': totalCost,
+            'profit': profit,
+          };
         }
       }
-
-      List<Map<String, dynamic>> topProducts = productSales.values.toList();
-      topProducts.sort((a, b) => b['quantity'].compareTo(a['quantity']));
-      
-      return topProducts.take(limit).toList();
-    } catch (e) {
-      throw Exception('Failed to get top selling products: $e');
     }
+
+    List<Map<String, dynamic>> topProducts = productSales.values.toList();
+    topProducts.sort((a, b) => b['quantity'].compareTo(a['quantity']));
+    
+    return topProducts.take(limit).toList();
+  } catch (e) {
+    throw Exception('Failed to get top selling products: $e');
   }
+}
 
   // Delete sales transaction
   Future<void> deleteSalesTransaction(String id) async {

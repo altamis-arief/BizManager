@@ -142,97 +142,119 @@ class _SalesReportsScreenState extends State<SalesReportsScreen> {
     );
   }
 
-  Widget _buildStatisticsCard() {
-    return Consumer<SalesProvider>(
-      builder: (context, provider, child) {
-        return FutureBuilder<Map<String, dynamic>?>(
-          future: provider.getSalesStats(_startDate, _endDate),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              );
-            }
-
-            if (!snapshot.hasData || snapshot.data == null) {
-              return const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('No data available'),
-                ),
-              );
-            }
-
-            final stats = snapshot.data!;
-
-            return Card(
+// Add this to the _buildStatisticsCard in SalesReportsScreen
+Widget _buildStatisticsCard() {
+  return Consumer<SalesProvider>(
+    builder: (context, provider, child) {
+      return FutureBuilder<Map<String, dynamic>?>(
+        future: provider.getSalesStats(_startDate, _endDate),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Card(
               child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.analytics, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Sales Overview',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    _buildStatRow(
-                      'Total Revenue',
-                      'RM ${(stats['totalRevenue'] as double).toStringAsFixed(2)}',
-                      Icons.attach_money,
-                      Colors.green,
-                    ),
-                    const Divider(height: 24),
-                    _buildStatRow(
-                      'Total Transactions',
-                      '${stats['totalTransactions']}',
-                      Icons.receipt,
-                      Colors.blue,
-                    ),
-                    const Divider(height: 24),
-                    _buildStatRow(
-                      'Items Sold',
-                      '${stats['totalItemsSold']}',
-                      Icons.shopping_cart,
-                      Colors.orange,
-                    ),
-                    const Divider(height: 24),
-                    _buildStatRow(
-                      'Average Sale',
-                      'RM ${(stats['averageTransactionValue'] as double).toStringAsFixed(2)}',
-                      Icons.trending_up,
-                      Colors.purple,
-                    ),
-                    if ((stats['totalDiscount'] as double) > 0) ...[
-                      const Divider(height: 24),
-                      _buildStatRow(
-                        'Total Discounts',
-                        'RM ${(stats['totalDiscount'] as double).toStringAsFixed(2)}',
-                        Icons.discount,
-                        Colors.red,
-                      ),
-                    ],
-                  ],
-                ),
+                padding: EdgeInsets.all(32),
+                child: Center(child: CircularProgressIndicator()),
               ),
             );
-          },
-        );
-      },
-    );
-  }
+          }
+
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const Card(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('No data available'),
+              ),
+            );
+          }
+
+          final stats = snapshot.data!;
+
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.analytics, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Sales Overview',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildStatRow(
+                    'Total Revenue',
+                    'RM ${(stats['totalRevenue'] as double).toStringAsFixed(2)}',
+                    Icons.attach_money,
+                    Colors.green,
+                  ),
+                  const Divider(height: 24),
+                  _buildStatRow(
+                    'Total Cost',
+                    'RM ${(stats['totalCost'] as double).toStringAsFixed(2)}',
+                    Icons.money_off,
+                    Colors.red,
+                  ),
+                  const Divider(height: 24),
+                  _buildStatRow(
+                    'Actual Profit',
+                    'RM ${(stats['actualProfit'] as double).toStringAsFixed(2)}',
+                    Icons.trending_up,
+                    Colors.blue,
+                  ),
+                  const Divider(height: 24),
+                  _buildStatRow(
+                    'Profit Margin',
+                    '${(stats['profitMargin'] as double).toStringAsFixed(1)}%',
+                    Icons.percent,
+                    Colors.purple,
+                  ),
+                  const Divider(height: 24),
+                  _buildStatRow(
+                    'Total Transactions',
+                    '${stats['totalTransactions']}',
+                    Icons.receipt,
+                    Colors.indigo,
+                  ),
+                  const Divider(height: 24),
+                  _buildStatRow(
+                    'Items Sold',
+                    '${stats['totalItemsSold']}',
+                    Icons.shopping_cart,
+                    Colors.orange,
+                  ),
+                  const Divider(height: 24),
+                  _buildStatRow(
+                    'Average Sale',
+                    'RM ${(stats['averageTransactionValue'] as double).toStringAsFixed(2)}',
+                    Icons.analytics,
+                    Colors.teal,
+                  ),
+                  if ((stats['totalDiscount'] as double) > 0) ...[
+                    const Divider(height: 24),
+                    _buildStatRow(
+                      'Total Discounts',
+                      'RM ${(stats['totalDiscount'] as double).toStringAsFixed(2)}',
+                      Icons.discount,
+                      Colors.deepOrange,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
   Widget _buildStatRow(
     String label,

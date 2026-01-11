@@ -99,6 +99,7 @@ class ProductProvider with ChangeNotifier {
     required String name,
     required String description,
     required double price,
+    required double cost,
     required int stock,
     required String category,
     File? imageFile,
@@ -123,11 +124,12 @@ class ProductProvider with ChangeNotifier {
         name: name,
         description: description,
         price: price,
+        cost: cost,
         stock: stock,
         category: category,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        userId: userId, // Add userId
+        userId: userId,
       );
 
       final productId = await _productService.createProduct(tempProduct);
@@ -174,6 +176,7 @@ class ProductProvider with ChangeNotifier {
     required String name,
     required String description,
     required double price,
+    required double cost,
     required int stock,
     required String category,
     String? existingImageUrl,
@@ -208,12 +211,13 @@ class ProductProvider with ChangeNotifier {
         name: name,
         description: description,
         price: price,
+        cost: cost,
         stock: stock,
         category: category,
         imageUrl: imageUrl,
         createdAt: DateTime.now(), // Will be preserved from original
         updatedAt: DateTime.now(),
-        userId: userId, // Add userId
+        userId: userId,
       );
 
       await _productService.updateProduct(product);
