@@ -10,6 +10,7 @@ import 'inventory_tracking_screen.dart';
 import 'sales_screen.dart';
 import 'sales_reports_screen.dart';
 import 'sales_history_screen.dart';
+import '../config/app_theme.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -180,73 +181,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildWelcomeCard() {
-    return Card(
-      elevation: 2,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).primaryColor.withOpacity(0.1),
-              Theme.of(context).primaryColor.withOpacity(0.05),
-            ],
+    return ModernCard(
+      gradient: AppTheme.primaryGradient,
+      child: Row(
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Center(
+              child: Text(
+                _userData!.fullName[0].toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 32,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 35,
-                backgroundColor: Theme.of(context).primaryColor,
-                child: Text(
-                  _userData!.fullName[0].toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 32,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Welcome back,',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome back,',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _userData!.fullName,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _userData!.email,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                const SizedBox(height: 4),
+                Text(
+                  _userData!.fullName,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  _userData!.email,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildQuickStats() {
+ Widget _buildQuickStats() {
     return Consumer3<ProductProvider, InventoryProvider, SalesProvider>(
       builder: (context, productProvider, inventoryProvider, salesProvider, child) {
         final totalProducts = productProvider.products.length;
@@ -260,13 +257,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Quick Stats',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
+                const SectionHeader(title: 'Quick Overview'),
                 if (activeAlerts > 0)
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -274,8 +265,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.red,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                      ),
                       borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFEF4444).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
@@ -299,77 +299,68 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            Row(
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.3,
               children: [
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.inventory_2,
-                    title: 'Total Products',
-                    value: totalProducts.toString(),
-                    color: Colors.blue,
-                    subtitle: 'Active inventory',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProductsListScreen(),
-                        ),
-                      );
-                    },
-                  ),
+                StatCard(
+                  icon: Icons.inventory_2,
+                  title: 'Total Products',
+                  value: totalProducts.toString(),
+                  color: const Color(0xFF6366F1),
+                  subtitle: 'Active inventory',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProductsListScreen(),
+                      ),
+                    );
+                  },
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.warning_amber,
-                    title: 'Low Stock',
-                    value: lowStockProducts.toString(),
-                    color: lowStockProducts > 0 ? Colors.orange : Colors.green,
-                    subtitle: lowStockProducts > 0 ? 'Need attention' : 'All good!',
-                    onTap: lowStockProducts > 0
-                        ? () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ProductsListScreen(),
-                              ),
-                            );
-                          }
-                        : null,
-                  ),
+                StatCard(
+                  icon: Icons.warning_amber,
+                  title: 'Low Stock',
+                  value: lowStockProducts.toString(),
+                  color: lowStockProducts > 0 ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+                  subtitle: lowStockProducts > 0 ? 'Need attention' : 'All good!',
+                  onTap: lowStockProducts > 0
+                      ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ProductsListScreen(),
+                            ),
+                          );
+                        }
+                      : null,
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.remove_circle_outline,
-                    title: 'Out of Stock',
-                    value: outOfStock.toString(),
-                    color: outOfStock > 0 ? Colors.red : Colors.green,
-                    subtitle: outOfStock > 0 ? 'Restock needed' : 'In stock',
-                  ),
+                StatCard(
+                  icon: Icons.remove_circle_outline,
+                  title: 'Out of Stock',
+                  value: outOfStock.toString(),
+                  color: outOfStock > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981),
+                  subtitle: outOfStock > 0 ? 'Restock needed' : 'In stock',
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.point_of_sale,
-                    title: 'Sales Today',
-                    value: salesProvider.transactions.take(99).length.toString() +
-                           (salesProvider.transactions.length > 99 ? '+' : ''),
-                    color: Colors.purple,
-                    subtitle: 'Transactions',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SalesScreen(),
-                        ),
-                      );
-                    },
-                  ),
+                StatCard(
+                  icon: Icons.point_of_sale,
+                  title: 'Sales Today',
+                  value: salesProvider.transactions.take(99).length.toString() +
+                         (salesProvider.transactions.length > 99 ? '+' : ''),
+                  color: const Color(0xFF8B5CF6),
+                  subtitle: 'Transactions',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SalesScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -449,213 +440,169 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildModulesGrid() {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.2,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildModuleCard(
-          icon: Icons.inventory_2,
-          title: 'Product Management',
-          description: '',
-          color: Colors.blue,
-          isActive: true,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ProductsListScreen(),
+        const SectionHeader(title: 'Modules'),
+        const SizedBox(height: 12),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.1,
+          children: [
+            _buildModuleCard(
+              icon: Icons.inventory_2,
+              title: 'Product\nManagement',
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
               ),
-            );
-          },
-        ),
-        _buildModuleCard(
-          icon: Icons.insert_chart,
-          title: 'Inventory Tracking',
-          description: '',
-          color: Colors.orange,
-          isActive: true,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const InventoryTrackingScreen(),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProductsListScreen(),
+                  ),
+                );
+              },
+            ),
+            _buildModuleCard(
+              icon: Icons.insert_chart,
+              title: 'Inventory\nTracking',
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
               ),
-            );
-          },
-        ),
-        _buildModuleCard(
-          icon: Icons.point_of_sale,
-          title: 'Sales Management',
-          description: '',
-          color: Colors.green,
-          isActive: true,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SalesScreen(),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const InventoryTrackingScreen(),
+                  ),
+                );
+              },
+            ),
+            _buildModuleCard(
+              icon: Icons.point_of_sale,
+              title: 'Sales\nManagement',
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF10B981), Color(0xFF059669)],
               ),
-            );
-          },
-        ),
-        _buildModuleCard(
-          icon: Icons.analytics,
-          title: 'Reports & Analytics',
-          description: '',
-          color: Colors.purple,
-          isActive: true,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SalesReportsScreen(),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SalesScreen(),
+                  ),
+                );
+              },
+            ),
+            _buildModuleCard(
+              icon: Icons.analytics,
+              title: 'Reports &\nAnalytics',
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
               ),
-            );
-          },
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SalesReportsScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ],
     );
   }
 
+
   Widget _buildModuleCard({
     required IconData icon,
     required String title,
-    required String description,
-    required Color color,
-    required bool isActive,
-    String? badge,
-    VoidCallback? onTap,
+    required Gradient gradient,
+    required VoidCallback onTap,
   }) {
-    return Card(
-      elevation: isActive ? 2 : 1,
-      child: InkWell(
-        onTap: isActive ? onTap : () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$title module coming soon!'),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: isActive
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      color.withOpacity(0.1),
-                      color.withOpacity(0.05),
-                    ],
-                  )
-                : null,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: AppTheme.cardRadius,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Stack(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isActive ? color : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: isActive ? Colors.white : Colors.grey[600],
-                      size: 28,
-                    ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppTheme.cardRadius,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: isActive ? Colors.black87 : Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey[500],
-                    ),
-                  ),
-                ],
-              ),
-              if (badge != null)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.amber,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      badge,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  child: Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 32,
                   ),
                 ),
-              if (!isActive)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1.3,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildQuickActions() {
+
+   Widget _buildQuickActions() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quick Actions',
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.bold),
-        ),
+        const SectionHeader(title: 'Quick Actions'),
         const SizedBox(height: 12),
-        Card(
+        ModernCard(
+          padding: EdgeInsets.zero,
           child: Column(
             children: [
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.blue.withOpacity(0.1),
-                  child: const Icon(Icons.add, color: Colors.blue),
-                ),
-                title: const Text('Add New Product'),
-                subtitle: const Text('Add a product to your inventory'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              _buildActionTile(
+                icon: Icons.add_circle,
+                iconColor: const Color(0xFF6366F1),
+                title: 'Add New Product',
+                subtitle: 'Add a product to your inventory',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -665,15 +612,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   );
                 },
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.green.withOpacity(0.1),
-                  child: const Icon(Icons.point_of_sale, color: Colors.green),
-                ),
-                title: const Text('New Sale'),
-                subtitle: const Text('Process a new sales transaction'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              Divider(height: 1, color: Colors.grey[200]),
+              _buildActionTile(
+                icon: Icons.point_of_sale,
+                iconColor: const Color(0xFF10B981),
+                title: 'New Sale',
+                subtitle: 'Process a new sales transaction',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -683,15 +627,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   );
                 },
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.purple.withOpacity(0.1),
-                  child: const Icon(Icons.history, color: Colors.purple),
-                ),
-                title: const Text('Sales History'),
-                subtitle: const Text('View past transactions'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              Divider(height: 1, color: Colors.grey[200]),
+              _buildActionTile(
+                icon: Icons.history,
+                iconColor: const Color(0xFF8B5CF6),
+                title: 'Sales History',
+                subtitle: 'View past transactions',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -701,30 +642,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   );
                 },
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.orange.withOpacity(0.1),
-                  child: const Icon(Icons.inventory, color: Colors.orange),
-                ),
-                title: const Text('View Low Stock'),
-                subtitle: Consumer<ProductProvider>(
-                  builder: (context, provider, child) {
-                    final count = provider.getLowStockProducts(10).length;
-                    return Text(
-                      count > 0
-                          ? '$count product${count > 1 ? 's' : ''} need${count == 1 ? 's' : ''} attention'
-                          : 'All products are well stocked',
-                    );
-                  },
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ProductsListScreen(),
-                    ),
+              Divider(height: 1, color: Colors.grey[200]),
+              Consumer<ProductProvider>(
+                builder: (context, provider, child) {
+                  final count = provider.getLowStockProducts(10).length;
+                  return _buildActionTile(
+                    icon: Icons.inventory,
+                    iconColor: count > 0 ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+                    title: 'View Low Stock',
+                    subtitle: count > 0
+                        ? '$count product${count > 1 ? 's' : ''} need${count == 1 ? 's' : ''} attention'
+                        : 'All products are well stocked',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProductsListScreen(),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
@@ -732,6 +668,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ],
+    );
+  }
+Widget _buildActionTile({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      leading: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: iconColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: iconColor, size: 24),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: AppTheme.textPrimary,
+        ),
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          subtitle,
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+      ),
+      trailing: Icon(
+        Icons.arrow_forward_ios,
+        size: 16,
+        color: Colors.grey[400],
+      ),
     );
   }
 }
