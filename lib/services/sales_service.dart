@@ -98,9 +98,9 @@ class SalesService {
             isLessThanOrEqualTo: endDate.toIso8601String())
           .get();
 
-      double totalRevenue = 0;
-      double totalCost = 0;
-      double totalDiscount = 0;
+      double totalRevenue = 0.0;
+      double totalCost = 0.0;
+      double totalDiscount = 0.0;
       int totalTransactions = snapshot.docs.length;
       int totalItemsSold = 0;
       Map<String, int> paymentMethods = {};
@@ -121,7 +121,7 @@ class SalesService {
       }
 
       final actualProfit = totalRevenue - totalCost;
-      final profitMargin = totalRevenue > 0 ? (actualProfit / totalRevenue) * 100 : 0;
+      final profitMargin = totalRevenue > 0 ? (actualProfit / totalRevenue) * 100 : 0.0;
 
       return {
         'totalRevenue': totalRevenue,
@@ -132,9 +132,9 @@ class SalesService {
         'totalTransactions': totalTransactions,
         'totalItemsSold': totalItemsSold,
         'averageTransactionValue': 
-          totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
+          totalTransactions > 0 ? totalRevenue / totalTransactions : 0.0,
         'averageProfit':
-          totalTransactions > 0 ? actualProfit / totalTransactions : 0,
+          totalTransactions > 0 ? actualProfit / totalTransactions : 0.0,
         'paymentMethods': paymentMethods,
       };
     } catch (e) {
