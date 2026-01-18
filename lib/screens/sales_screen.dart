@@ -222,84 +222,91 @@ class _SalesScreenState extends State<SalesScreen> {
     );
   }
 
-  Widget _buildProductCard(Product product) {
-    final isLowStock = product.stock <= 10;
-    final isOutOfStock = product.stock == 0;
+ // Replace the _buildProductCard method in sales_screen.dart with this:
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      elevation: 2,
-      child: InkWell(
-        onTap: isOutOfStock ? null : () => _showAddToCartDialog(product),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  product.imageUrl != null
-                      ? Image.network(
-                          product.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[200],
-                              child: const Icon(Icons.image_not_supported, size: 40),
-                            );
-                          },
-                        )
-                      : Container(
-                          color: Colors.grey[200],
-                          child: const Icon(Icons.inventory_2, size: 40),
-                        ),
-                  if (isOutOfStock)
-                    Container(
-                      color: Colors.black54,
-                      child: const Center(
-                        child: Text(
-                          'OUT OF STOCK',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
+Widget _buildProductCard(Product product) {
+  final isLowStock = product.stock <= 10;
+  final isOutOfStock = product.stock == 0;
+
+  return Card(
+    clipBehavior: Clip.antiAlias,
+    elevation: 2,
+    child: InkWell(
+      onTap: isOutOfStock ? null : () => _showAddToCartDialog(product),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Image section with fixed height
+          Expanded(
+            flex: 3,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                product.imageUrl != null
+                    ? Image.network(
+                        product.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.image_not_supported, size: 40),
+                          );
+                        },
+                      )
+                    : Container(
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.inventory_2, size: 40),
+                      ),
+                if (isOutOfStock)
+                  Container(
+                    color: Colors.black54,
+                    child: const Center(
+                      child: Text(
+                        'OUT OF STOCK',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
                       ),
                     ),
-                  if (!isOutOfStock && isLowStock)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.orange,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'Low: ${product.stock}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  ),
+                if (!isOutOfStock && isLowStock)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Low: ${product.stock}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
+          ),
+          // Product info section with constrained height
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min, // Add this
+                children: [
+                  // Product name - flexible but constrained
+                  Flexible(
+                    child: Text(
                       product.name,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
@@ -308,37 +315,40 @@ class _SalesScreenState extends State<SalesScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                  ),
+                  // Price and stock info - always visible
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min, // Add this
+                    children: [
+                      Text(
+                        'RM ${product.price.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      if (!isOutOfStock)
                         Text(
-                          'RM ${product.price.toStringAsFixed(2)}',
+                          'Stock: ${product.stock}',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontSize: 11,
+                            color: isLowStock ? Colors.orange : Colors.grey[600],
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        if (!isOutOfStock)
-                          Text(
-                            'Stock: ${product.stock}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isLowStock ? Colors.orange : Colors.grey[600],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildCart() {
     return Consumer<SalesProvider>(
@@ -720,7 +730,7 @@ Widget _buildCartSummary(SalesProvider provider) {
         const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
-          height: 50,
+          height: 54,
           child: ElevatedButton.icon(
             onPressed: provider.isLoading ? null : _processSale,
             icon: const Icon(Icons.check_circle, size: 24),
