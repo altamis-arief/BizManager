@@ -196,11 +196,11 @@ class ProductProvider with ChangeNotifier {
 
       String? imageUrl = existingImageUrl;
 
-      // Upload new image if provided
+      // Upload new image if providedd
       if (newImageFile != null) {
         // Delete old image if exists
         if (existingImageUrl != null && existingImageUrl.isNotEmpty) {
-          await _productService.deleteImageFromStorage(existingImageUrl);
+          await _productService.deleteImageFromCloudinary(existingImageUrl);
         }
         
         imageUrl = await _productService.uploadProductImage(newImageFile, id);

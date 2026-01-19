@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import '../models/product.dart';
+import 'cloudinary_service.dart';
 
 class ProductService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final CloudinaryService _cloudinaryService = CloudinaryService();
   final String _collectionName = 'products';
 
   // Create a new product
@@ -106,9 +106,9 @@ class ProductService {
   // Permanently delete a product
   Future<void> permanentlyDeleteProduct(String id, String? imageUrl) async {
     try {
-      // Delete image from storage if exists
+      // Delete image from Cloudinary if exists
       if (imageUrl != null && imageUrl.isNotEmpty) {
-        await deleteImageFromStorage(imageUrl);
+        await deleteImageFromCloudinary(imageUrl);
       }
       
       // Delete document from Firestore
@@ -130,27 +130,70 @@ class ProductService {
     }
   }
 
-  // Upload product image to Firebase Storage
+  // Upload product image to Cloudinary
   Future<String> uploadProductImage(File imageFile, String productId) async {
     try {
-      final ref = _storage.ref().child('products/$productId/${DateTime.now().millisecondsSinceEpoch}.jpg');
-      final uploadTask = await ref.putFile(imageFile);
-      final downloadUrl = await uploadTask.ref.getDownloadURL();
-      return downloadUrl;
+      // Validate image
+      if (!_cloudinaryService.isValidImage(imageFile)) {
+        throw Exception('Invalid image file format');
+      }
+
+      // Check image size (max 5MB)
+      double sizeMB = await _cloudinaryService.getImageSize(imageFile);
+      if (sizeMB > 5) {
+        throw Exception('Image size too large. Maximum 5MB allowed.');
+      }
+
+      // Upload to Cloudinary in 'products' folder
+      String? imageUrl = await _cloudinaryService.uploadImageWithOptions(
+        imageFile: imageFile,
+        folder: 'bizmanager/products',
+        maxWidth: 1920,
+        maxHeight: 1080,
+        quality: 85,
+      );
+
+      if (imageUrl == null) {
+        throw Exception('Failed to upload image to Cloudinary');
+      }
+
+      return imageUrl;
     } catch (e) {
       throw Exception('Failed to upload image: $e');
     }
   }
 
-  // Delete image from Firebase Storage
-  Future<void> deleteImageFromStorage(String imageUrl) async {
+  // Delete image from Cloudinary
+  Future<void> deleteImageFromCloudinary(String imageUrl) async {
     try {
-      final ref = _storage.refFromURL(imageUrl);
-      await ref.delete();
+      if (_cloudinaryService.isCloudinaryUrl(imageUrl)) {
+        await _cloudinaryService.deleteImage(imageUrl);
+      }
     } catch (e) {
-      // Ignore error if image doesn't exist
-      print('Failed to delete image: $e');
+      // Log error but don't throw - image deletion is not critical
+      print('Failed to delete image from Cloudinary: $e');
     }
+  }
+
+  // Get optimized image URL for display
+  String getOptimizedImageUrl(String originalUrl, {int? width, int? height}) {
+    if (_cloudinaryService.isCloudinaryUrl(originalUrl)) {
+      return _cloudinaryService.getOptimizedUrl(
+        originalUrl,
+        width: width,
+        height: height,
+        quality: 80,
+      );
+    }
+    return originalUrl;
+  }
+
+  // Get thumbnail URL
+  String getThumbnailUrl(String originalUrl, {int size = 200}) {
+    if (_cloudinaryService.isCloudinaryUrl(originalUrl)) {
+      return _cloudinaryService.getThumbnailUrl(originalUrl, size: size);
+    }
+    return originalUrl;
   }
 
   // Search products by name for a specific user
