@@ -108,7 +108,7 @@ BizManager follows a layered architecture:
 - Data Layer: Firebase Firestore database
 
 ### 🔧 Technology Stack
-- Frontend: :
+- Frontend: : Flutter Framework
 - Backend & Database: :Firebase
 
 ### 🔁 State Management
