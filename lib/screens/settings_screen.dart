@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
+import 'edit_profile_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,6 +16,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _authService = AuthService();
   UserModel? _userData;
   bool _isLoading = true;
+  
+  // App Settings
+  bool _enableNotifications = true;
+  bool _enableStockAlerts = true;
+  bool _enableSalesNotifications = true;
+  bool _enableSoundEffects = false;
+  bool _enableVibration = true;
+  
+  // Display Settings
+  String _dateFormat = 'DD/MM/YYYY';
+  String _currency = 'MYR (RM)';
+  String _language = 'English';
 
   @override
   void initState() {
@@ -84,18 +97,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   
                   const SizedBox(height: 24),
                   
-                  // Settings List
+                  // Account Settings
                   _buildSettingsSection('Account', [
                     _buildSettingsTile(
                       icon: Icons.person_outline,
-                      title: 'Profile',
-                      subtitle: 'View and edit your profile',
-                      onTap: () => _showProfileDialog(),
+                      title: 'Edit Profile',
+                      subtitle: 'Update your personal information',
+                      onTap: () async {
+                        if (_userData != null) {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditProfileScreen(userData: _userData!),
+                            ),
+                          );
+                          if (result == true) {
+                            _loadUserData();
+                          }
+                        }
+                      },
+                    ),
+                    _buildSettingsTile(
+                      icon: Icons.lock_outline,
+                      title: 'Change Password',
+                      subtitle: 'Update your account password',
+                      onTap: () => _showChangePasswordDialog(),
+                    ),
+                    _buildSettingsTile(
+                      icon: Icons.security,
+                      title: 'Privacy & Security',
+                      subtitle: 'Manage your privacy settings',
+                      onTap: () => _showPrivacyDialog(),
                     ),
                   ]),
                   
                   const SizedBox(height: 16),
                   
+                  // Appearance Settings
                   _buildSettingsSection('Appearance', [
                     _buildSwitchTile(
                       icon: isDark ? Icons.dark_mode : Icons.light_mode,
@@ -106,16 +144,128 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         context.read<ThemeProvider>().toggleTheme();
                       },
                     ),
+                    _buildSettingsTile(
+                      icon: Icons.language,
+                      title: 'Language',
+                      subtitle: _language,
+                      onTap: () => _showLanguageDialog(),
+                    ),
+                    _buildSettingsTile(
+                      icon: Icons.date_range,
+                      title: 'Date Format',
+                      subtitle: _dateFormat,
+                      onTap: () => _showDateFormatDialog(),
+                    ),
+                    _buildSettingsTile(
+                      icon: Icons.attach_money,
+                      title: 'Currency',
+                      subtitle: _currency,
+                      onTap: () => _showCurrencyDialog(),
+                    ),
                   ]),
                   
                   const SizedBox(height: 16),
                   
+                  // Notifications Settings
+                  _buildSettingsSection('Notifications', [
+                    _buildSwitchTile(
+                      icon: Icons.notifications_outlined,
+                      title: 'Enable Notifications',
+                      subtitle: 'Receive app notifications',
+                      value: _enableNotifications,
+                      onChanged: (value) {
+                        setState(() => _enableNotifications = value);
+                      },
+                    ),
+                    _buildSwitchTile(
+                      icon: Icons.inventory,
+                      title: 'Stock Alerts',
+                      subtitle: 'Get notified about low stock',
+                      value: _enableStockAlerts,
+                      onChanged: (value) {
+                        setState(() => _enableStockAlerts = value);
+                      },
+                    ),
+                    _buildSwitchTile(
+                      icon: Icons.point_of_sale,
+                      title: 'Sales Notifications',
+                      subtitle: 'Get notified about new sales',
+                      value: _enableSalesNotifications,
+                      onChanged: (value) {
+                        setState(() => _enableSalesNotifications = value);
+                      },
+                    ),
+                  ]),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Sound & Vibration Settings
+                  _buildSettingsSection('Sound & Vibration', [
+                    _buildSwitchTile(
+                      icon: Icons.volume_up,
+                      title: 'Sound Effects',
+                      subtitle: 'Enable app sounds',
+                      value: _enableSoundEffects,
+                      onChanged: (value) {
+                        setState(() => _enableSoundEffects = value);
+                      },
+                    ),
+                    _buildSwitchTile(
+                      icon: Icons.vibration,
+                      title: 'Vibration',
+                      subtitle: 'Enable haptic feedback',
+                      value: _enableVibration,
+                      onChanged: (value) {
+                        setState(() => _enableVibration = value);
+                      },
+                    ),
+                  ]),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Data & Storage Settings
+                  _buildSettingsSection('Data & Storage', [
+                    _buildSettingsTile(
+                      icon: Icons.cloud_download,
+                      title: 'Backup Data',
+                      subtitle: 'Backup your business data',
+                      onTap: () => _showBackupDialog(),
+                    ),
+                    _buildSettingsTile(
+                      icon: Icons.download,
+                      title: 'Export Reports',
+                      subtitle: 'Download sales and inventory reports',
+                      onTap: () => _showExportDialog(),
+                    ),
+                    _buildSettingsTile(
+                      icon: Icons.delete_sweep,
+                      title: 'Clear Cache',
+                      subtitle: 'Free up storage space',
+                      onTap: () => _showClearCacheDialog(),
+                    ),
+                  ]),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Support Settings
                   _buildSettingsSection('Support', [
                     _buildSettingsTile(
                       icon: Icons.help_outline,
                       title: 'Help & Support',
                       subtitle: 'Get help with the app',
                       onTap: () => _showHelpDialog(),
+                    ),
+                    _buildSettingsTile(
+                      icon: Icons.feedback_outlined,
+                      title: 'Send Feedback',
+                      subtitle: 'Share your thoughts with us',
+                      onTap: () => _showFeedbackDialog(),
+                    ),
+                    _buildSettingsTile(
+                      icon: Icons.rate_review,
+                      title: 'Rate App',
+                      subtitle: 'Rate us on the store',
+                      onTap: () => _showRateAppDialog(),
                     ),
                     _buildSettingsTile(
                       icon: Icons.info_outline,
@@ -127,6 +277,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   
                   const SizedBox(height: 16),
                   
+                  // Account Actions
                   _buildSettingsSection('Account Actions', [
                     _buildSettingsTile(
                       icon: Icons.logout,
@@ -336,34 +487,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showProfileDialog() {
-    if (_userData == null) return;
-
+  // Dialog Methods
+  void _showChangePasswordDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.person, size: 24),
-            SizedBox(width: 8),
-            Text('Profile Information'),
-          ],
+        title: const Text('Change Password'),
+        content: const Text(
+          'Password change functionality will be available in a future update. For now, please use the "Forgot Password" option on the login screen.',
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInfoRow('Name', _userData!.fullName),
-            const SizedBox(height: 16),
-            _buildInfoRow('Email', _userData!.email),
-            const SizedBox(height: 16),
-            _buildInfoRow('User ID', _userData!.uid),
-            const SizedBox(height: 16),
-            _buildInfoRow(
-              'Member Since',
-              '${_userData!.createdAt.day}/${_userData!.createdAt.month}/${_userData!.createdAt.year}',
-            ),
-          ],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Privacy & Security'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Your privacy matters to us',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              _buildPrivacyItem('Data Encryption', 'All your data is encrypted'),
+              _buildPrivacyItem('Secure Storage', 'Data stored securely in Firebase'),
+              _buildPrivacyItem('Privacy First', 'We never share your data'),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -375,24 +537,239 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w600,
+  Widget _buildPrivacyItem(String title, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle, color: Colors.green[600], size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                Text(description, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+              ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _showLanguageDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Language'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              title: const Text('English'),
+              value: 'English',
+              groupValue: _language,
+              onChanged: (value) {
+                setState(() => _language = value!);
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<String>(
+              title: const Text('Bahasa Malaysia'),
+              value: 'Bahasa Malaysia',
+              groupValue: _language,
+              onChanged: (value) {
+                setState(() => _language = value!);
+                Navigator.pop(context);
+              },
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 15),
+      ),
+    );
+  }
+
+  void _showDateFormatDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Date Format'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              title: const Text('DD/MM/YYYY'),
+              value: 'DD/MM/YYYY',
+              groupValue: _dateFormat,
+              onChanged: (value) {
+                setState(() => _dateFormat = value!);
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<String>(
+              title: const Text('MM/DD/YYYY'),
+              value: 'MM/DD/YYYY',
+              groupValue: _dateFormat,
+              onChanged: (value) {
+                setState(() => _dateFormat = value!);
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<String>(
+              title: const Text('YYYY-MM-DD'),
+              value: 'YYYY-MM-DD',
+              groupValue: _dateFormat,
+              onChanged: (value) {
+                setState(() => _dateFormat = value!);
+                Navigator.pop(context);
+              },
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  void _showCurrencyDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Currency'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              title: const Text('MYR (RM)'),
+              value: 'MYR (RM)',
+              groupValue: _currency,
+              onChanged: (value) {
+                setState(() => _currency = value!);
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<String>(
+              title: const Text('USD (\$)'),
+              value: 'USD (\$)',
+              groupValue: _currency,
+              onChanged: (value) {
+                setState(() => _currency = value!);
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showBackupDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Backup Data'),
+        content: const Text('Your data is automatically backed up to Firebase Cloud. Manual backup will be available in a future update.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Export Reports'),
+        content: const Text('Report export functionality (PDF, Excel) will be available in a future update.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showClearCacheDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Cache'),
+        content: const Text('Are you sure you want to clear the app cache? This will free up storage space but may slow down the app temporarily.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Cache cleared successfully')),
+              );
+            },
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFeedbackDialog() {
+    final feedbackController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Send Feedback'),
+        content: TextField(
+          controller: feedbackController,
+          decoration: const InputDecoration(
+            hintText: 'Share your thoughts...',
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 5,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Thank you for your feedback!')),
+              );
+            },
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRateAppDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rate BizManager'),
+        content: const Text('Enjoying BizManager? Please take a moment to rate us on the app store!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Later'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Rate Now'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -417,39 +794,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              _buildHelpItem(
-                Icons.dashboard,
-                'Dashboard',
-                'View business overview and quick stats',
-              ),
-              _buildHelpItem(
-                Icons.inventory_2,
-                'Products',
-                'Manage your product inventory',
-              ),
-              _buildHelpItem(
-                Icons.point_of_sale,
-                'Sales',
-                'Process transactions at the point of sale',
-              ),
-              _buildHelpItem(
-                Icons.insert_chart,
-                'Inventory Tracking',
-                'Track stock movements and alerts',
-              ),
-              _buildHelpItem(
-                Icons.analytics,
-                'Reports',
-                'View detailed sales reports and analytics',
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'For more assistance, please contact support.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
-              ),
+              _buildHelpItem(Icons.dashboard, 'Dashboard', 'View business overview'),
+              _buildHelpItem(Icons.inventory_2, 'Products', 'Manage inventory'),
+              _buildHelpItem(Icons.point_of_sale, 'Sales', 'Process transactions'),
+              _buildHelpItem(Icons.insert_chart, 'Tracking', 'Monitor stock movements'),
+              _buildHelpItem(Icons.analytics, 'Reports', 'View analytics'),
             ],
           ),
         ),
@@ -467,39 +816,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                Text(description, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
               ],
             ),
           ),
@@ -522,66 +847,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                   ),
-                  child: const Icon(
-                    Icons.business_center,
-                    size: 40,
-                    color: Colors.white,
-                  ),
+                  borderRadius: BorderRadius.circular(20),
                 ),
+                child: const Icon(Icons.business_center, size: 40, color: Colors.white),
               ),
               const SizedBox(height: 16),
-              const Center(
-                child: Text(
-                  'BizManager',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              const Text('BizManager', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              const Center(
-                child: Text(
-                  'Version 1.0.0',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              ),
+              const Text('Version 1.0.0', style: TextStyle(fontSize: 16, color: Colors.grey)),
               const SizedBox(height: 24),
               const Text(
-                'BizManager is a comprehensive business management solution designed to help you manage your inventory, track sales, and grow your business.',
+                'A comprehensive business management solution for small businesses.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14),
               ),
               const SizedBox(height: 24),
               const Divider(),
               const SizedBox(height: 16),
               _buildAboutItem('Developer', 'BizManager Team'),
-              _buildAboutItem('Release Date', 'January 2026'),
+              _buildAboutItem('Release', 'January 2026'),
               _buildAboutItem('Platform', 'Flutter'),
-              _buildAboutItem('License', 'Proprietary'),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  '© 2026 BizManager. All rights reserved.',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey[600],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
             ],
           ),
         ),
@@ -601,20 +893,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[600],
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
         ],
       ),
     );

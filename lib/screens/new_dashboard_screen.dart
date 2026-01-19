@@ -8,6 +8,7 @@ import '../services/auth_service.dart';
 import '../models/user_model.dart';
 import 'sales_reports_screen.dart';
 import 'products_list_screen.dart';
+import 'profile_screen.dart';
 
 class NewDashboardScreen extends StatefulWidget {
   const NewDashboardScreen({super.key});
@@ -43,34 +44,6 @@ class _NewDashboardScreenState extends State<NewDashboardScreen> {
           _isLoading = false;
         });
       }
-    }
-  }
-
-  Future<void> _signOut() async {
-    final shouldSignOut = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Sign Out'),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldSignOut == true) {
-      await _authService.signOut();
     }
   }
 
@@ -127,9 +100,48 @@ class _NewDashboardScreenState extends State<NewDashboardScreen> {
               context.read<ThemeProvider>().toggleTheme();
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _signOut,
+          // Profile Button replacing Logout
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              icon: _userData != null
+                  ? Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                        ),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          _userData!.fullName[0].toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    )
+                  : const Icon(Icons.person_outline),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+                // Reload user data after returning from profile
+                _loadUserData();
+              },
+              tooltip: 'Profile',
+            ),
           ),
         ],
       ),
