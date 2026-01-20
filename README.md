@@ -116,9 +116,53 @@ BizManager follows a layered architecture:
   - Simple and suitable for small-to-medium scale apps
   - Manages product state, inventory updates, and sales data
 
+
+---
+## Final User Interfaces
+
+- Dashboard
+<img width="388" height="860" alt="image" src="https://github.com/user-attachments/assets/9bc1357e-e914-472a-9d74-761b06136d00" />
+
+- Product Management
+<img width="386" height="862" alt="image" src="https://github.com/user-attachments/assets/b88c0638-113d-4392-9502-ba136d124507" />
+
+- Point of Sale
+<img width="384" height="862" alt="image" src="https://github.com/user-attachments/assets/57286e0f-b297-4f6b-a6dc-370bb2258860" />
+
+- Inventory Tracking
+<img width="386" height="862" alt="image" src="https://github.com/user-attachments/assets/dba9195d-d945-4cbd-8f40-55c950c5a1a8" />
+
+- Sales Report 
+<img width="387" height="859" alt="image" src="https://github.com/user-attachments/assets/c4b02dd4-febb-44b2-9e2a-dfb8acec8b8f" />
+
+- Add Product 
+<img width="387" height="861" alt="image" src="https://github.com/user-attachments/assets/d8fb2be8-4df3-49f8-ac87-8891d081e3d3" />
+
+---
+## Summary of Features
+
+There are 4 main features that BizManager has achieved which are the Product management. This Feature can add,edit, delete and update its new product into the system. Next, Sales Tracking. It tracks according to how many products have been sold. Third feature is the
+Inventory Tracking. This feature helps to track available stock. The user can monitor their stocks of products. Lastly, Sales report. It summarise the sales report based on how much sales does it produce by week,month or year.
+
 ---
 
-## 🗃️ Data Model
+## Technical Explanation
+
+We have been using Firebase as our database. The products have been created will be stored in our Firebase database including the user accounts.
+
+--- 
+
+## Limitations and Future Enhancements
+
+Limitations
+- Not fully adapated into real business enviroment
+- No intergration into a real business system
+
+Future Enhancements
+- Intergrated system with a real business enviroment
+- AI intergration into system
+
+## 🗃️ Data Model 
 
 ### 🔥 Firestore Structure
 
@@ -141,3 +185,6 @@ sales (collection)
      ├── quantity
      ├── totalPrice
      ├── date
+
+---
+
